@@ -1,8 +1,0 @@
-ddududuudududuuddd
-
-2ga edycja
-
-maks = 1
-
-for maks in range(10):
-   print(maks+=1)
