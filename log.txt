@@ -1,0 +1,2 @@
+foo args: a=10, b=20, c=[10, 20, 30]; kwargs: ; execution time: 0.00 sec.
+foo args: a=10, b=20, c=[10, 20, 30]; kwargs: ; execution time:0.00 sec.
