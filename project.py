@@ -20,6 +20,9 @@ Dungeons → nazwa, min_level, max_level, lista potworów
 Monsters → nazwa, level, hp_max, exp_reward, gold_reward, item_drop, attack
 Items → nazwa, rarity, bonusy
 Pets → bonusy dla gracza
+
+baza done
+
 Generator danych w Pythonie:
 Losuje graczy, guildy, dungeon, potwory, itemy, pety
 INSERT do bazy → baza zawiera puste „żywe” obiekty, gotowe do symulacji
