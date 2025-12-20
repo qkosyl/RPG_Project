@@ -159,3 +159,24 @@ weapon = {
         "Różdżka Boga Magii"
     ]
 }
+
+Rarity = {
+    "Normal": [1,20],
+    "Rare": [21,40],
+    "Epic": [41,60],
+    "Legend": [61,80],
+    "Hero": [81,100]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
