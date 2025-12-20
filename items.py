@@ -1,4 +1,3 @@
-
 weapon = {
     "sword": [
         "Zardzewiałe Ostrze",
