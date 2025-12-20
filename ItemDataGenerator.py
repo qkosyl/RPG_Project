@@ -37,26 +37,31 @@ def assign_rarity(ItemList):
 
 def global_calculation(items):
     for item in items:
+        level = int(item['level'])
+
         if item['type'] == 'sword':
             item['bonuses'] = {
-                'strength': int(item['level']) * 2.75,
-                'agility': int(item['level']) * 0.6,
-                'intelligence': int(item['level']) * 0.15
+                'strength': round(level * 2.75, 2),
+                'agility': round(level * 0.6, 2),
+                'intelligence': round(level * 0.15, 2)
             }
             multipliers = (4.0, 2.5, 1.05)
+
         elif item['type'] == 'staff':
             item['bonuses'] = {
-                'strength': int(item['level']) * 0.1,
-                'agility': int(item['level']) * 0.4,
-                'intelligence': int(item['level']) * 3
+                'strength': round(level * 0.1, 2),
+                'agility': round(level * 0.4, 2),
+                'intelligence': round(level * 3, 2)
             }
             multipliers = (1.1, 2.1213, 4.5)
+
         elif item['type'] == 'bow':
             item['bonuses'] = {
-                'strength': int(item['level']) * 0.5,
-                'agility': int(item['level']) * 2.5,
-                'intelligence': int(item['level']) * 0.5
+                'strength': round(level * 0.5, 2),
+                'agility': round(level * 2.5, 2),
+                'intelligence': round(level * 0.5, 2)
             }
+
             multipliers = (2.0, 3.0, 1.75)
 
         s = item['bonuses']['strength']
@@ -80,5 +85,5 @@ with engine.connect() as conn:
         )
     conn.commit()
     with pd.option_context('display.max_row', 0, 'display.max_columns', None):
-        df = pd.read_sql(text("select * from items"), conn)
-        print(df)
+        df = pd.read_sql(text("select * from items limit 10"), conn)
+        print(df.to_string(index=False, max_rows=None, max_cols=None))
