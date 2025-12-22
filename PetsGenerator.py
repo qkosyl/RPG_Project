@@ -31,3 +31,11 @@ def grant_pet_bonus():
     return result
 
 grant_pet_bonus()
+
+def bonus_per_level():
+    all_pets_with_bonuses = grant_pet_bonus()
+    result = []
+    for pet in all_pets_with_bonuses:
+        if pet["bonus"] == 'attack_speed':
+           pet["ratio"] = int(pet["level"]*0.35)
+           result.append(pet)
