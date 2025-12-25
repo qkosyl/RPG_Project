@@ -49,13 +49,17 @@ def bonus_per_level():
             if bonus in BONUS_MULTIPLIERS:
                 pet["ratio"][bonus] = round(BONUS_MULTIPLIERS[bonus] * pet["level"],2)
         result.append(pet)
-    print(result)
     return result
 
+
 pets = bonus_per_level()
+print(pets)
+
 
 with engine.connect() as conn:
     for pet in pets:
+        pet["bonus"] = json.dumps(pet["bonus"])
+        pet["ratio"] = json.dumps(pet["ratio"])
         conn.execute(
             text("insert into pets(name,element,level,bonus,ratio)"
                  "VALUES(:name, :element, :level, :bonus, :ratio)"),
@@ -63,6 +67,6 @@ with engine.connect() as conn:
         )
     conn.commit()
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-        df = pd.read_sql(text("select * from pet"), conn)
+        df = pd.read_sql(text("select * from pets"), conn)
 
         print(df)
