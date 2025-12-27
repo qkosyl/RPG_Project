@@ -1,5 +1,5 @@
 '''
-1. Korelacja dungeon <-> monsters
+1. Korelacja dungeon <-> monsters  DONE
 
 2. Symulacja walki Player < - > (Monster, Dungeon)
 
