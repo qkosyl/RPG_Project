@@ -27,12 +27,12 @@ Generator danych w Pythonie:
 Losuje graczy, guildy, dungeon, potwory, itemy, pety
 INSERT do bazy → baza zawiera puste „żywe” obiekty, gotowe do symulacji
 
-2️⃣ Symulacja wejścia gracza do dungeon
+Symulacja wejścia gracza do dungeon
 
 Gracz sprawdzany pod względem levelu → musi mieścić się w dungeon.min_level ≤ player.level ≤ dungeon.max_level
 Jeśli spełnia warunek → rozpoczyna dungeon run
 
-3️⃣ Symulacja walki z potworami (dynamiczna)
+Symulacja walki z potworami (dynamiczna)
 
 Tymczasowe wartości w Pythonie:
 HP gracza (hp_current)
@@ -48,7 +48,7 @@ Level up: jeśli tymczasowy exp ≥ próg → zwiększenie levelu gracza
 Przechowywanie wyników:
 Wszystko w Pythonie do momentu zakończenia dungeon run → baza nie jest spamowana UPDATE’ami
 
-4️⃣ Aktualizacja gracza w bazie
+Aktualizacja gracza w bazie
 
 Po zakończeniu dungeon run lub po ustalonych tickach:
 Players.hp_current → końcowe HP
@@ -59,13 +59,13 @@ Players.inventory → nowe itemy
 Players.potions → użyte mikstury
 Potwory i dungeon → statyczne, nie update’ujesz w bazie
 
-5️⃣ Multi-gracz / skalowanie
+Multi-gracz / skalowanie
 
 Każdy gracz symulowany osobno w Pythonie → wszystkie walki trzymane w pamięci
 UPDATE w bazie po dungeon run → zmniejsza liczbę zapytań SQL
 W przypadku 100+ graczy: pętla w Pythonie symuluje wszystkich, opcjonalnie można użyć multiprocessing/threading
 
-6️⃣ Dynamiczne elementy RPG
+6Dynamiczne elementy RPG
 
 Potiony → ilość i użycie w walce
 Uniki (Dodge) → procentowa szansa na uniknięcie obrażeń
@@ -74,18 +74,16 @@ Regeneracja HP → pasywna lub z petów/itemów
 Level up i exp → dynamicznie w zależności od walk
 Drop itemów → tymczasowo w Pythonie, potem update do bazy
 
-7️⃣ Zasada główna
+Zasada główna
 
 Python = silnik symulacji
 Tymczasowe wartości, logika walki, efekty potionów, tury, buffy/debuffy
 Baza = trwały stan gracza po symulacji
 HP, exp, gold, level, inventory, potions
 
-💡 Efekt końcowy:
+Efekt końcowy:
 
 Gracze „żyją” w dungeonach, zdobywają doświadczenie, itemy i złoto
-System jest dynamiczny, ale baza pozostaje wydajna
 Świat dungeonów i potworów jest spójny i powtarzalny
-Łatwo rozszerzalny o nowe mechaniki: guild bonusy, różne dungeony, pety, buffy
 '''
 
