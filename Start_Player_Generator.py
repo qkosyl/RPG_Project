@@ -3,6 +3,7 @@ from kiwisolver import strength
 from sqlalchemy import create_engine, text
 import random
 import json
+import useful_data
 engine = create_engine("mysql+pymysql://root:qwe123@localhost:3306/rpg_database")
 
 rpg_names = [
@@ -17,7 +18,13 @@ rpg_names = [
     "Isilwen", "Corwyn", "Lyric", "Galadriel", "Nythera", "Vaelora", "Ronith", "Ardyn", "Sylvara", "Doreth",
     "Eloweth", "Thalric", "Isalyn", "Varric", "Lysanor", "Fenlith", "Mirith", "Kaedara", "Arion", "Selwynna"
 ]
-items = ["Wooden Sword","Wooden Bow","Wooden Staff"]
+
+weapon_dict = useful_data.weapon
+start_sword = weapon_dict["sword"][0]
+start_bow = weapon_dict["bow"][0]
+start_staff = weapon_dict["staff"][0]
+
+
 
 with engine.connect() as conn:
     for _ in range(1000):
@@ -27,11 +34,11 @@ with engine.connect() as conn:
         intelligence = random.randint(1, 10)
 
         if intelligence > agility and intelligence > strength:
-            inventory_item = json.dumps(items[2])
+            inventory_item = start_staff
         elif agility > intelligence and agility > strength:
-            inventory_item = json.dumps(items[1])
+            inventory_item = start_bow
         else:
-            inventory_item = json.dumps(items[0])
+            inventory_item = start_sword
 
         player = {
             "name": name, "level": random.randint(1, 5), "experience": random.randint(1, 5),

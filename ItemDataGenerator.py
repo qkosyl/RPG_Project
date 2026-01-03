@@ -1,12 +1,12 @@
 import pandas as pd
 from sqlalchemy import create_engine, text
-import items
+import useful_data
 import json
 
 engine = create_engine("mysql+pymysql://root:qwe123@localhost:3306/rpg_database")
 
 
-weapon_dict = items.weapon
+weapon_dict = useful_data.weapon
 swords = weapon_dict["sword"]
 bows = weapon_dict["bow"]
 staffs = weapon_dict["staff"]
@@ -14,7 +14,7 @@ staffs = weapon_dict["staff"]
 def level_req(min_level = 1, max_level = 100, step=2):
     result = []
 
-    for weapon_type, weapons in weapon_dict.items():
+    for weapon_type, weapons in weapon_dict.useful_data():
         for index, weapon in enumerate(weapons):
             level = min_level + index * step
             if level > max_level:
@@ -28,7 +28,7 @@ def level_req(min_level = 1, max_level = 100, step=2):
 
 
 def assign_rarity(ItemList):
-    rarity = items.Rarity
+    rarity = useful_data.Rarity
     for rarity_name, level_range in rarity.items():
         for item in ItemList:
             if level_range[0] <= item['level'] <= level_range[1]:
