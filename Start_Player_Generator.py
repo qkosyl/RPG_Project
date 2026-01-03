@@ -3,7 +3,7 @@ from kiwisolver import strength
 from sqlalchemy import create_engine, text
 import random
 import json
-engine = create_engine("mysql+pymysql://root:kozak123@localhost:3306/rpg_database")
+engine = create_engine("mysql+pymysql://root:qwe123@localhost:3306/rpg_database")
 
 rpg_names = [
     "Aranthor", "Lyriana", "Kaelith", "Draven", "Seraphine", "Thalorin", "Elowen", "Fenric", "Isolde", "Galadric",

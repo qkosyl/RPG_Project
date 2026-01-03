@@ -2,7 +2,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 import random
 import json
-engine = create_engine("mysql+pymysql://root:kozak123@localhost:3306/rpg_database")
+engine = create_engine("mysql+pymysql://root:qwe123@localhost:3306/rpg_database")
 
 list_of_monsters = ["Goblin", "Kobold", "Ratman", "Bandit", "Thug", "Pickpocket", "Cutpurse",
                     "Footpad", "Brigand", "Outlaw", "Raider", "Marauder", "Highwayman",

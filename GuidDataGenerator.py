@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, text
 import useful_data
 import random
 
-engine = create_engine("mysql+pymysql://root:kozak123@localhost:3306/rpg_database")
+engine = create_engine("mysql+pymysql://root:qwe123@localhost:3306/rpg_database")
 
 with engine.connect() as conn:
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):

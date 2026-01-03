@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, text
 import items
 import json
 
-engine = create_engine("mysql+pymysql://root:kozak123@localhost:3306/rpg_database")
+engine = create_engine("mysql+pymysql://root:qwe123@localhost:3306/rpg_database")
 
 
 weapon_dict = items.weapon
