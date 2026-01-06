@@ -2,6 +2,7 @@
 
 import pandas as pd
 from sqlalchemy import create_engine, text
+import ast
 
 engine = create_engine("mysql+pymysql://root:qwe123@localhost:3306/rpg_database")
 
@@ -24,31 +25,33 @@ with engine.connect() as conn:
 #name,level,experience,gold,hp_current,hp_max,"
 #"potions,dodge,strenght,intelligence,agility,defence,inventory, inventory_capacity, pet_id, guild_id
 class Player:
-    def __init__(self, name, level, hp, hp_max, exp, inventory):
+    def __init__(self, name, level, hp, hp_max, exp, inventory, defence):
         self.name = name
         self.level = level
         self.hp = hp
-        self.max_hp = hp_max
+        self.hp_max = hp_max
         self.exp = exp
         self.inventory = inventory
+        self.defence = defence
 
 #(name,level,hp_max,exp_reward,gold_reward,item_drop,attack
 class Monster:
     def __init__(self, name, level, exp_reward, hp_max, gold_reward, item_drop, attack):
         self.name = name
         self.level = level
-        self.max_hp = hp_max
+        self.hp_max = hp_max
         self.exp_reward = exp_reward
         self.gold_reward = gold_reward
         self.item_drop = item_drop
         self.attack = attack
 
 class ItemWeapon:
-    def __init__(self, name, bonuses, attack, level_req):
+    def __init__(self, name, bonuses, attack, level_req, type_of_weapon):
         self.name = name
         self.bonuses = bonuses
         self.attack = attack
         self.level_req = level_req
+        self.type_of_weapon = type_of_weapon
 
 
 
@@ -71,7 +74,8 @@ player = Player(
     hp=player_data['hp_current'],
     hp_max=player_data['hp_max'],
     exp=player_data['experience'],
-    inventory=player_data['inventory']
+    inventory=player_data['inventory'],
+    defence=player_data['defence']
 )
 
 inventory_str = player_data['inventory']
@@ -84,12 +88,39 @@ with engine.connect() as conn:
     )
 
 item_row = df_item.iloc[0]
+bonuses_dict = ast.literal_eval(item_row['bonuses'])
 active_weapon = ItemWeapon(
     name=item_row['name'],
-    bonuses=item_row['bonuses'],
+    bonuses=bonuses_dict,
     attack=item_row['attack'],
-    level_req=item_row['level_req']
+    level_req=item_row['level_req'],
+    type_of_weapon = item_row['type']
 )
 
 
-print(str(player.inventory))
+
+def scalar():
+    if active_weapon.type_of_weapon == 'Sword':
+        damage = active_weapon.attack * int(active_weapon.bonuses["strength"]) * 2
+        + active_weapon.attack * int(active_weapon.bonuses["agility"])
+    elif active_weapon.type_of_weapon == 'Bow':
+        damage = active_weapon.attack * int(active_weapon.bonuses["strength"])
+        + active_weapon.attack * int(active_weapon.bonuses["agility"]) * 2.5
+    else:
+        damage = int(active_weapon.bonuses["intelligence"]) * 3.5
+    return damage
+def fight():
+    monster.hp = monster.hp_max
+    while player.hp > 0 and monster.hp_max > 0:
+        player_damage = scalar()
+        monster_damage = monster.attack - player.defence
+        monster.hp -= player_damage
+        player.hp -= max(monster_damage, 0)
+        if monster.hp_max <= 0:
+            player.exp += monster.exp_reward
+            print(f"{player.name} zajebał {monster.name} i zakurwił na dziąsło {monster.exp_reward} exp")
+        elif player.hp <= 0:
+            print(f"{player.name} wyjebał sie na {monster.name}")
+
+
+fight()
