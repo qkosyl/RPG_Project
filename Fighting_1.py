@@ -4,6 +4,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 import ast
 import random
+import json
 
 engine = create_engine("mysql+pymysql://root:qwe123@localhost:3306/rpg_database")
 
@@ -36,6 +37,8 @@ class Player:
         self.defence = defence
 
 #(name,level,hp_max,exp_reward,gold_reward,item_drop,attack
+
+
 class Monster:
     def __init__(self, name, level, exp_reward, hp_max, gold_reward, item_drop, attack):
         self.name = name
@@ -70,8 +73,7 @@ min_level = max(player.level - 3, 1)
 max_level = player.level + 3
 eligible_monsters = df_monster[(df_monster['level'] >= min_level) & (df_monster['level'] <= max_level)]
 monster_data = eligible_monsters.sample(n=1).iloc[0]
-print(df_monster['level'].dtype)
-
+monster_item_drop = json.loads(monster_data['item_drop'])
 
 monster = Monster(
     name = monster_data['name'],   # <- TAK
@@ -79,7 +81,7 @@ monster = Monster(
     hp_max = monster_data['hp_max'],
     exp_reward = monster_data['exp_reward'],
     gold_reward = monster_data['gold_reward'],
-    item_drop = monster_data['item_drop'],
+    item_drop = monster_item_drop,
     attack = monster_data['attack']
 )
 
@@ -112,8 +114,20 @@ def scalar():
     else:
         damage = int(active_weapon.bonuses["intelligence"]) * 3.5
     return damage
+
+
+
+def dropItem():
+    chance = round(random.random(),3)
+    return chance
+
+
+
+
 def fight():
+    List_of_Items = player.inventory.split(",")
     monster.hp = monster.hp_max
+
     while player.hp > 0 and monster.hp_max > 0:
         player_damage = scalar()
         monster_damage = monster.attack - player.defence
@@ -124,6 +138,15 @@ def fight():
         if monster.hp <= 0:
             player.exp += monster.exp_reward
             print(f"{player.name} zajebał {monster.name} i zakurwił na dziąsło {monster.exp_reward} exp")
+            chance = dropItem()
+            item = random.choice(monster.item_drop)
+            if chance > 0.40 and len(item) > 1:
+                List_of_Items.append(item)
+                player.inventory = ",".join(List_of_Items)
+                print(f"{player.name} zajebał jak żyd: {item} i spierdala na chate świętować")
+            else:
+                print("ale chuja dostał")
+
             break
         elif player.hp <= 0:
             print(f"{player.name} wyjebał sie na {monster.name} jebany debil")
