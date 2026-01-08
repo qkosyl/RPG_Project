@@ -1,13 +1,13 @@
 '''
 1. Korelacja dungeon <-> monsters  DONE
 
-2. Symulacja walki Player < - > (Monster, Dungeon)
+2. Symulacja walki Player < - > (Monster, Dungeon) - HALF DONE 1 PERSON
 
-3. System Levelowania
+3. System Levelowania IN PROGRESS
 
-4. nadanie itemow potworom
+4. nadanie itemow potworom - DONE
 
-5. losowy drop itemów z monsterów przedział +/- 5 od levela postaci
+5. losowy drop itemów z monsterów przedział +/- 5 od levela postaci IN PROGRESS
 
 7. tabela ekwipunek (player_id, bron_id, zbroja_id, rekawice_id, spodnie_id, buty_id, pierscien_id, naszyjnik_id)
 ( Ekwipunek_ubrany vs Bagaż )
