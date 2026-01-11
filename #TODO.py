@@ -3,7 +3,7 @@
 
 2. Symulacja walki Player < - > (Monster, Dungeon) - HALF DONE 1 PERSON
 
-3. System Levelowania IN PROGRESS
+3. System Levelowania DONE
 
 4. nadanie itemow potworom - DONE
 

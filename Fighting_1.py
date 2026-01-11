@@ -14,6 +14,7 @@ with engine.connect() as conn:
 
         df_player = pd.read_sql(text("select * from players limit 10"), conn)
         df_monster = pd.read_sql(text("select * from monsters"), conn)
+        df_level = pd.read_sql(text("select level, avg(exp_reward) as exp_reward from monsters group by level order by level"), conn)
         df_item = pd.read_sql(text("SELECT * FROM items"), conn)
         records = df1.rename(columns={'round(avg(exp_reward))': 'exp_reward'}).set_index('level')['exp_reward'].to_dict()
         exp_needed_table = []
@@ -27,7 +28,8 @@ with engine.connect() as conn:
 #name,level,experience,gold,hp_current,hp_max,"
 #"potions,dodge,strenght,intelligence,agility,defence,inventory, inventory_capacity, pet_id, guild_id
 class Player:
-    def __init__(self, name, level, hp, hp_max, exp, inventory, defence):
+    def __init__(self,id, name, level, hp, hp_max, exp, inventory, defence):
+        self.id = id
         self.name = name
         self.level = level
         self.hp = hp
@@ -59,6 +61,7 @@ class ItemWeapon:
 
 player_data = df_player.iloc[0]
 player = Player(
+    id=player_data['id'],
     name=player_data['name'],
     level=player_data['level'],
     hp=player_data['hp_current'],
@@ -67,6 +70,35 @@ player = Player(
     inventory=player_data['inventory'],
     defence=player_data['defence']
 )
+
+class Leveling:
+    def __init__(self, level, exp_reward):
+        self.level = level
+        self.exp_reward = exp_reward
+
+level_data = Leveling(
+    level=df_level['level'],
+    exp_reward=df_level['exp_reward']
+)
+
+def exp_needed_by_level():
+    player_xp = player.exp
+    level = level_data.level
+    monster_xp = level_data.exp_reward
+    list_of_requirements = []
+    for level, monster_xp in zip(level_data.level, level_data.exp_reward):
+        requirment_of_level = monster_xp * level * 10
+        pairs = {"level" : level, "requirement": requirment_of_level}
+        list_of_requirements.append(pairs)
+    print(list_of_requirements)
+    return list_of_requirements
+
+exp_needed_by_level()
+
+
+
+
+
 
 
 min_level = max(player.level - 3, 1)
@@ -106,11 +138,11 @@ active_weapon = ItemWeapon(
 
 def scalar():
     if active_weapon.type_of_weapon == 'sword':
-        damage = active_weapon.attack * int(active_weapon.bonuses["strength"]) * 2
-        + active_weapon.attack * int(active_weapon.bonuses["agility"])
+        damage = (active_weapon.attack * int(active_weapon.bonuses["strength"]) * 2
+        + active_weapon.attack * int(active_weapon.bonuses["agility"]))
     elif active_weapon.type_of_weapon == 'bow':
-        damage = active_weapon.attack * int(active_weapon.bonuses["strength"])
-        + active_weapon.attack * int(active_weapon.bonuses["agility"]) * 2.5
+        damage = (active_weapon.attack * int(active_weapon.bonuses["strength"])
+        + active_weapon.attack * int(active_weapon.bonuses["agility"])) * 2.5
     else:
         damage = int(active_weapon.bonuses["intelligence"]) * 3.5
     return damage
@@ -128,6 +160,7 @@ def fight():
     List_of_Items = player.inventory.split(",")
     monster.hp = monster.hp_max
 
+
     while player.hp > 0 and monster.hp_max > 0:
         player_damage = scalar()
         monster_damage = monster.attack - player.defence
@@ -138,6 +171,13 @@ def fight():
         if monster.hp <= 0:
             player.exp += monster.exp_reward
             print(f"{player.name} zajebał {monster.name} i zakurwił na dziąsło {monster.exp_reward} exp")
+            new_exp = player.exp
+            with engine.connect() as conn:
+                conn.execute(
+                    text("UPDATE players SET experience = :new_exp WHERE id = :player_id"),
+                    {"new_exp": new_exp, "player_id": player.id}
+                )
+                conn.commit()
             chance = dropItem()
             item = random.choice(monster.item_drop)
             if chance > 0.40 and len(item) > 1:
@@ -152,6 +192,11 @@ def fight():
             print(f"{player.name} wyjebał sie na {monster.name} jebany debil")
             print(f"{monster.name} zostało {monster.hp} hp")
             break
-
-
+        requirements = exp_needed_by_level()
+        next_level_req_list = [r["requirement"] for r in requirements if r["level"] == player.level + 1]
+        if next_level_req_list:
+            next_level_req = next_level_req_list[0]
+            if player.exp >= next_level_req:
+                player.level += 1
+                print(f"{player.name} awansował na level {player.level}!")
 fight()
