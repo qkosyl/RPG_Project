@@ -90,10 +90,9 @@ def exp_needed_by_level():
         requirment_of_level = monster_xp * level * 10
         pairs = {"level" : level, "requirement": requirment_of_level}
         list_of_requirements.append(pairs)
-    print(list_of_requirements)
     return list_of_requirements
 
-exp_needed_by_level()
+
 
 
 
