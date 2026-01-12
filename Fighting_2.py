@@ -88,7 +88,6 @@ def exp_needed_by_level():
         requirment_of_level = monster_xp * level * level * 2
         pairs = {"level" : level, "requirement": requirment_of_level}
         list_of_requirements.append(pairs)
-    print(list_of_requirements)
     return list_of_requirements
 
 
@@ -164,12 +163,10 @@ def fight_all(players):
             player_damage = scalar(player)
             monster_damage = monster.attack - player.defence
             monster.hp -= player_damage
-            print(f"Gracz{player.name} zakurwił {player_damage} frajerowi {monster.name} i zostało mu {monster.hp}hp")
             player.hp -= max(monster_damage, 0)
-            print(f"Monster {monster.name} zajebał lepe {player.name} i zostało mu {player.hp} hp")
             if monster.hp <= 0:
                 player.exp += monster.exp_reward
-                print(f"{player.name} zajebał {monster.name} i zakurwił na dziąsło {monster.exp_reward} exp")
+                #print(f"{player.name} zajebał {monster.name} i zakurwił na dziąsło {monster.exp_reward} exp")
                 new_exp = player.exp
                 with engine.connect() as conn:
                     conn.execute(
@@ -183,7 +180,7 @@ def fight_all(players):
                     next_level_req = next_level_req_list[0]
                     if player.exp >= next_level_req:
                         player.level += 1
-                        print(f"{player.name} awansował na level {player.level}!")
+                        #print(f"{player.name} awansował na level {player.level}!")
                         with engine.connect() as conn:
                             conn.execute(
                                 text("UPDATE players SET level = level + 1 WHERE id = :player_id"),
@@ -196,7 +193,6 @@ def fight_all(players):
                 if chance > 0.40 and item is not None:
                     List_of_Items.append(item)
                     player.inventory = ",".join(List_of_Items)
-                    print(player.inventory)
                     with engine.connect() as conn:
                         conn.execute(
                             text("UPDATE players SET inventory = :inventory WHERE id = :player_id"),
@@ -204,14 +200,33 @@ def fight_all(players):
                         )
                         conn.commit()
                         pass
-                    print(f"{player.name} zajebał jak żyd: {item} i spierdala na chate świętować")
+                    #print(f"{player.name} zajebał jak żyd: {item} i spierdala na chate świętować")
                 else:
-                    print("ale chuja dostał")
+                    pass
+                    #print("ale chuja dostał")
 
                 break
             elif player.hp <= 0:
-                print(f"{player.name} wyjebał sie na {monster.name} jebany debil")
-                print(f"{monster.name} zostało {monster.hp} hp")
+                #print(f"{player.name} wyjebał sie na {monster.name} jebany debil")
                 break
 
-fight_all(players)
+
+
+def time_gooner():
+    while True:
+        try:
+            vote = int(input("how many days has to be skipped?(1-20): "))
+            if 1 <= vote <= 20:
+                break
+            else:
+                print("od 1 do 20 !!!")
+        except ValueError:
+            print(f"cos uczynil ty gnido, nie możesz wpisać {vote}")
+    i = 0
+    for _ in range(vote):
+        i += 1
+        print(f"\n--- Day {i} ---")
+        fight_all(players)
+
+
+time_gooner()
