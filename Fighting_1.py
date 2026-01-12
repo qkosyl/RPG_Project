@@ -83,13 +83,12 @@ level_data = Leveling(
 
 def exp_needed_by_level():
     player_xp = player.exp
-    level = level_data.level
-    monster_xp = level_data.exp_reward
     list_of_requirements = []
     for level, monster_xp in zip(level_data.level, level_data.exp_reward):
-        requirment_of_level = monster_xp * level * 10
+        requirment_of_level = monster_xp * level * level * 2
         pairs = {"level" : level, "requirement": requirment_of_level}
         list_of_requirements.append(pairs)
+    print(list_of_requirements)
     return list_of_requirements
 
 
@@ -116,8 +115,9 @@ monster = Monster(
     attack = monster_data['attack']
 )
 
-inventory_str = player_data['inventory']
-active_item_name = inventory_str
+player_invetory_str = player_data['inventory']
+player_invetory = player_invetory_str.split(",")
+active_item_name = player_invetory[0]
 with engine.connect() as conn:
     df_item = pd.read_sql(
         text("SELECT * FROM items WHERE name = :name"),
@@ -125,15 +125,19 @@ with engine.connect() as conn:
         params={"name": active_item_name}
     )
 
-item_row = df_item.iloc[0]
-bonuses_dict = ast.literal_eval(item_row['bonuses'])
-active_weapon = ItemWeapon(
-    name=item_row['name'],
-    bonuses=bonuses_dict,
-    attack=item_row['attack'],
-    level_req=item_row['level_req'],
-    type_of_weapon = item_row['type']
-)
+
+item_row = df_item.iloc[0] if not df_item.empty else None
+if item_row is None:
+    raise ValueError(f"Item '{active_item_name}' nie istnieje w bazie danych")
+else:
+    bonuses_dict = ast.literal_eval(item_row['bonuses'])
+    active_weapon = ItemWeapon(
+        name=item_row['name'],
+        bonuses=bonuses_dict,
+        attack=item_row['attack'],
+        level_req=item_row['level_req'],
+        type_of_weapon = item_row['type']
+    )
 
 def scalar():
     if active_weapon.type_of_weapon == 'sword':
@@ -177,11 +181,33 @@ def fight():
                     {"new_exp": new_exp, "player_id": player.id}
                 )
                 conn.commit()
+            requirements = exp_needed_by_level()
+            next_level_req_list = [r["requirement"] for r in requirements if r["level"] == player.level + 1]
+            if next_level_req_list:
+                next_level_req = next_level_req_list[0]
+                if player.exp >= next_level_req:
+                    player.level += 1
+                    print(f"{player.name} awansował na level {player.level}!")
+                    with engine.connect() as conn:
+                        conn.execute(
+                            text("UPDATE players SET level = level + 1 WHERE id = :player_id"),
+                            {"player_id": player.id}
+                        )
+                        conn.commit()
+                        pass
             chance = dropItem()
-            item = random.choice(monster.item_drop)
-            if chance > 0.40 and len(item) > 1:
+            item = random.choice(monster.item_drop) if monster.item_drop else None
+            if chance > 0.40 and item is not None:
                 List_of_Items.append(item)
                 player.inventory = ",".join(List_of_Items)
+                print(player.inventory)
+                with engine.connect() as conn:
+                    conn.execute(
+                        text("UPDATE players SET inventory = :inventory WHERE id = :player_id"),
+                        {"inventory": player.inventory,"player_id": player.id}
+                    )
+                    conn.commit()
+                    pass
                 print(f"{player.name} zajebał jak żyd: {item} i spierdala na chate świętować")
             else:
                 print("ale chuja dostał")
@@ -191,11 +217,5 @@ def fight():
             print(f"{player.name} wyjebał sie na {monster.name} jebany debil")
             print(f"{monster.name} zostało {monster.hp} hp")
             break
-        requirements = exp_needed_by_level()
-        next_level_req_list = [r["requirement"] for r in requirements if r["level"] == player.level + 1]
-        if next_level_req_list:
-            next_level_req = next_level_req_list[0]
-            if player.exp >= next_level_req:
-                player.level += 1
-                print(f"{player.name} awansował na level {player.level}!")
+
 fight()
