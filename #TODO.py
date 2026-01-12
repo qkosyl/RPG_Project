@@ -1,7 +1,7 @@
 '''
 1. Korelacja dungeon <-> monsters  DONE
 
-2. Symulacja walki Player < - > (Monster, Dungeon) - HALF DONE 1 PERSON
+2. Symulacja walki Player < - > (Monster, Dungeon) - done
 
 3. System Levelowania DONE
 
