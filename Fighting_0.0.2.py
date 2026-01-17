@@ -27,7 +27,6 @@ with engine.connect() as conn:
             i += 1
         #exp_needed_table = {'level': 1, 'exp_needed': 120.0}...
 
-
 #name,level,experience,gold,hp_current,hp_max,"
 #"potions,dodge,strenght,intelligence,agility,defence,inventory, inventory_capacity, pet_id, guild_id
 class Player:
@@ -38,13 +37,11 @@ class Player:
         self.hp = hp
         self.hp_max = hp_max
         self.exp = exp
-        self.inventory = inventory
+        self.inventory = str(inventory)
         self.defence = defence
         self.player_class = player_class
 
-#(name,level,hp_max,exp_reward,gold_reward,item_drop,attack
-
-
+#(name,level,hp_max,exp_reward,gold_reward,item_drop,attack)
 class Monster:
     def __init__(self, name, level, exp_reward, hp_max, gold_reward, item_drop, attack):
         self.name = name
@@ -54,7 +51,6 @@ class Monster:
         self.gold_reward = gold_reward
         self.item_drop = item_drop
         self.attack = attack
-
 
 class ItemWeapon:
     def __init__(self, name, bonuses, attack, level_req, type_of_weapon):
@@ -86,6 +82,7 @@ def weapon_requirements(player):
                 fit_items.append(item_data)
     if fit_items:
         active_weapon = max(fit_items, key=lambda x: x['attack'])
+
     else:
         fallback_item_name = player_inv[0]
         active_weapon = items_cache[fallback_item_name]
@@ -93,31 +90,34 @@ def weapon_requirements(player):
     player.active_weapon = active_weapon
     return active_weapon
 
-    '''
-    with engine.connect() as conn:
-        df_item = pd.read_sql(
-            text("SELECT * FROM items WHERE name = :name"),
-            conn,
-            params={"name": active_item_name}
-        )
-    '''
 
 
-players = []
-for _ ,pdata in df_player.iterrows():
-    player_obj = Player(
-    id=pdata["id"],
-    name = pdata['name'],
-    level = pdata['level'],
-    hp = pdata['hp_current'],
-    hp_max = pdata['hp_max'],
-    exp = pdata['experience'],
-    inventory = pdata['inventory'],
-    defence = pdata['defence'],
-    player_class = pdata['class'])
-    players.append(player_obj)
 
+'''
+with engine.connect() as conn:
+    df_item = pd.read_sql(
+        text("SELECT * FROM items WHERE name = :name"),
+        conn,
+        params={"name": active_item_name}
+    )
+'''
 
+def load_players(df_player_data):
+    players_list = []
+    for _ ,pdata in df_player_data.iterrows():
+        player_obj = Player(
+        id=pdata["id"],
+        name = pdata['name'],
+        level = pdata['level'],
+        hp = pdata['hp_current'],
+        hp_max = pdata['hp_max'],
+        exp = pdata['experience'],
+        inventory = str(pdata['inventory']),
+        defence = pdata['defence'],
+        player_class = pdata['class'])
+        players_list.append(player_obj)
+    return players_list
+players = load_players(df_player) #moment wejscia wszystkich danych o playerach
 
 class Leveling:
     def __init__(self, level, exp_reward):
@@ -137,8 +137,6 @@ def exp_needed_by_level():
         list_of_requirements.append(pairs)
     return list_of_requirements
 
-
-
 def scalar(player):
 
     weapon = player.active_weapon
@@ -152,13 +150,9 @@ def scalar(player):
         damage = int(weapon.bonuses["intelligence"]) * 3.5
     return damage
 
-
-
 def dropItem():
     chance = round(random.random(),3)
     return chance
-
-
 
 '''ddd
 def fight_all(players):
@@ -257,11 +251,15 @@ def fight_all(players):
                 #print(f"{player.name} wyjebał sie na {monster.name} jebany debil")
                 break
 '''
-def fight_single_player(player):
-    List_of_Items = player.inventory.split(",")
 
-    min_level = max(player.level - 3, 1)
-    max_level = player.level + 3
+
+
+
+def fight_single_player(player_data):
+    list_of_Items = player_data.inventory.split(",")
+
+    min_level = max(player_data.level - 3, 1)
+    max_level = player_data.level + 3
 
     eligible_monsters = df_monster[
         (df_monster['level'] >= min_level) &
@@ -281,7 +279,7 @@ def fight_single_player(player):
         attack=monster_data['attack']
     )
 
-    player_inventory = player.inventory.split(",")
+    player_inventory = player_data.inventory.split(",")
     active_item_name = player_inventory[0]
 
     with engine.connect() as conn:
@@ -293,12 +291,12 @@ def fight_single_player(player):
 
     if df_item.empty:
         raise ValueError(f"Item '{active_item_name}' nie istnieje w bazie danych")
-    weapon_requirements(player)
+    weapon_requirements(player_data)
     item_row = df_item.iloc[0]
 
     bonuses_dict = ast.literal_eval(item_row['bonuses'])
 
-    player.active_weapon = ItemWeapon(
+    player_data.active_weapon = ItemWeapon(
         name=item_row['name'],
         bonuses=bonuses_dict,
         attack=item_row['attack'],
@@ -308,66 +306,105 @@ def fight_single_player(player):
 
     monster.hp = monster.hp_max
 
-    while player.hp > 0 and monster.hp > 0:
-        player_damage = scalar(player)
-        monster_damage = max(monster.attack - player.defence, 0)
+    while player_data.hp > 0 and monster.hp > 0:
+        player_damage = scalar(player_data)
+        monster_damage = max(monster.attack - player_data.defence, 0)
 
         monster.hp -= player_damage
-        player.hp -= monster_damage
+        player_data.hp -= monster_damage
 
         if monster.hp <= 0:
-            handle_win(player, monster, List_of_Items)
+            handle_win(player_data, monster, list_of_Items)
             break
 
-        if player.hp <= 0:
+        if player_data.hp <= 0:
             break
 
-def handle_win(player, monster, List_of_Items):
-    player.exp += monster.exp_reward
+def handle_win(player_data, monster_data, list_of_items_data):
+    player_data.exp += monster_data.exp_reward
 
-    with engine.connect() as conn:
-        conn.execute(
+    with engine.connect() as connection:
+        connection.execute(
             text("UPDATE players SET experience = :exp WHERE id = :id"),
-            {"exp": player.exp, "id": player.id}
+            {"exp": player_data.exp, "id": player_data.id}
         )
-        conn.commit()
+        connection.commit()
 
     requirements = exp_needed_by_level()
     next_level = next(
-        (r["requirement"] for r in requirements if r["level"] == player.level + 1),
+        (r["requirement"] for r in requirements if r["level"] == player_data.level + 1),
         None
     )
 
-    if next_level and player.exp >= next_level:
-        player.level += 1
-        with engine.connect() as conn:
-            conn.execute(
+    if next_level and player_data.exp >= next_level:
+        player_data.level += 1
+        with engine.connect() as connection:
+            connection.execute(
                 text("UPDATE players SET level = level + 1 WHERE id = :id"),
-                {"id": player.id}
+                {"id": player_data.id}
             )
-            conn.commit()
+            connection.commit()
 
     chance = dropItem()
-    if chance > 0.80 and monster.item_drop:
-        item = random.choice(monster.item_drop)
-        List_of_Items.append(item)
-        player.inventory = ",".join(List_of_Items)
+    if chance > 0.80 and monster_data.item_drop:
+        item = random.choice(monster_data.item_drop)
+        list_of_items_data.append(item)
+        player_data.inventory = ",".join(list_of_items_data)
 
+        with engine.connect() as connection:
+            connection.execute(
+                text("UPDATE players SET inventory = :inv WHERE id = :id"),
+                {"inv": player_data.inventory, "id": player_data.id}
+            )
+            connection.commit()
+
+
+
+def sell_other_weapons(players_data):
+    for player in players_data:
+        # Ustaw aktywną broń
+        active_weapon = weapon_requirements(player)
+        active_name = str(active_weapon.name).strip().lower()
+
+        # Tworzymy listę przedmiotów w inventory
+        inventory_list = [str(x).strip() for x in str(player.inventory).split(',') if x.strip()]
+
+        inventory_after_sell = []
+        item_to_sell = []
+        active_count = 0
+
+        for item in inventory_list:
+            item_name = item.strip().lower()
+            if item_name == active_name:
+                if active_count == 0:
+                    inventory_after_sell.append(item)  # zostawiamy jeden egzemplarz
+                    active_count += 1
+                else:
+                    item_to_sell.append(item)
+            else:
+                item_to_sell.append(item)
+
+        player.inventory = ",".join(inventory_after_sell)
+
+        print(f"{player.name} inventory po selekcji: {player.inventory}, do sprzedania: {item_to_sell}")
+'''
+        # Aktualizacja w bazie danych
         with engine.connect() as conn:
             conn.execute(
                 text("UPDATE players SET inventory = :inv WHERE id = :id"),
                 {"inv": player.inventory, "id": player.id}
             )
             conn.commit()
+'''
 
 
-def fight_all(players, fights_per_player=3):
+def fight_all(players_data, fights_per_player=3):
     max_workers = min(32, os.cpu_count() * 2)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
 
-        for player in players:
+        for player in players_data:
             for _ in range(fights_per_player):
                 # każda walka w osobnym wątku
                 futures.append(executor.submit(fight_single_player, player))
@@ -379,7 +416,9 @@ def fight_all(players, fights_per_player=3):
                 print("Błąd w wątku:", e)
 
 
+vote = ""
 def time_gooner():
+    global vote
     while True:
         try:
             vote = int(input("how many days has to be skipped?(1-50): "))
@@ -397,5 +436,8 @@ def time_gooner():
         fight_all(players)
         end =  time.perf_counter()
         print(end-start)
+    sell_other_weapons(players)
 
 time_gooner()
+
+

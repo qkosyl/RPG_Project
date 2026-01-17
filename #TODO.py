@@ -7,7 +7,9 @@
 
 4. nadanie itemow potworom - DONE
 
-5. losowy drop itemów z monsterów przedział +/- 5 od levela postaci IN PROGRESS
+5. losowy drop itemów z monsterów przedział +/- 5 od levela postaci DONE
+
+6. usuwanie duplikatow z EQ
 
 7. tabela ekwipunek (player_id, bron_id, zbroja_id, rekawice_id, spodnie_id, buty_id, pierscien_id, naszyjnik_id)
 ( Ekwipunek_ubrany vs Bagaż )
