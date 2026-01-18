@@ -7,6 +7,7 @@ import random
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
+import traceback
 
 
 engine = create_engine("mysql+pymysql://root:qwe123@localhost:3306/rpg_database")
@@ -64,6 +65,7 @@ items_cache = {
     for index, row in df_item.iterrows()
 }
 
+
 def weapon_requirements(player):
     player_inv = player.inventory.split(",")
     fit_items = []
@@ -89,7 +91,6 @@ def weapon_requirements(player):
 
     player.active_weapon = active_weapon
     return active_weapon
-
 
 
 
@@ -132,7 +133,7 @@ level_data = Leveling(
 def exp_needed_by_level():
     list_of_requirements = []
     for level, monster_xp in zip(level_data.level, level_data.exp_reward):
-        requirment_of_level = monster_xp * level * level * 2
+        requirment_of_level = monster_xp * (level ** 1.5)
         pairs = {"level" : level, "requirement": requirment_of_level}
         list_of_requirements.append(pairs)
     return list_of_requirements
@@ -252,11 +253,11 @@ def fight_all(players):
                 break
 '''
 
-
-
-
 def fight_single_player(player_data):
+    player_data.hp = player_data.hp_max
     list_of_Items = player_data.inventory.split(",")
+
+    weapon = weapon_requirements(player_data)
 
     min_level = max(player_data.level - 3, 1)
     max_level = player_data.level + 3
@@ -279,20 +280,8 @@ def fight_single_player(player_data):
         attack=monster_data['attack']
     )
 
-    player_inventory = player_data.inventory.split(",")
-    active_item_name = player_inventory[0]
 
-    with engine.connect() as conn:
-        df_item = pd.read_sql(
-            text("SELECT * FROM items WHERE name = :name"),
-            conn,
-            params={"name": active_item_name}
-        )
-
-    if df_item.empty:
-        raise ValueError(f"Item '{active_item_name}' nie istnieje w bazie danych")
-    weapon_requirements(player_data)
-    item_row = df_item.iloc[0]
+    item_row = weapon
 
     bonuses_dict = ast.literal_eval(item_row['bonuses'])
 
@@ -303,6 +292,7 @@ def fight_single_player(player_data):
         level_req=item_row['level_req'],
         type_of_weapon=item_row['type']
     )
+
 
     monster.hp = monster.hp_max
 
@@ -315,8 +305,6 @@ def fight_single_player(player_data):
 
         if monster.hp <= 0:
             handle_win(player_data, monster, list_of_Items)
-            break
-
         if player_data.hp <= 0:
             break
 
@@ -357,48 +345,51 @@ def handle_win(player_data, monster_data, list_of_items_data):
                 {"inv": player_data.inventory, "id": player_data.id}
             )
             connection.commit()
+    sell_other_weapons(player_data)
 
 
+def sell_other_weapons(player_data):
+    active_weapon = weapon_requirements(player_data)
+    active_name = str(active_weapon['name']).strip().lower()
+    item_data = items_cache[active_weapon['name']]
+    item_level = item_data["level_req"]
+    item_attack = item_data["attack"]
+    inventory_list = [str(x).strip() for x in str(player_data.inventory).split(',') if x.strip()]
 
-def sell_other_weapons(players_data):
-    for player in players_data:
-        # Ustaw aktywną broń
-        active_weapon = weapon_requirements(player)
-        active_name = str(active_weapon.name).strip().lower()
+    inventory_after_sell = []
+    item_to_sell = []
+    active_count = 0
 
-        # Tworzymy listę przedmiotów w inventory
-        inventory_list = [str(x).strip() for x in str(player.inventory).split(',') if x.strip()]
-
-        inventory_after_sell = []
-        item_to_sell = []
-        active_count = 0
-
-        for item in inventory_list:
-            item_name = item.strip().lower()
-            if item_name == active_name:
-                if active_count == 0:
-                    inventory_after_sell.append(item)  # zostawiamy jeden egzemplarz
-                    active_count += 1
-                else:
-                    item_to_sell.append(item)
+    for item in inventory_list:
+        item_name = item.strip().lower()
+        if item_name == active_name:
+            if active_count == 0:
+                inventory_after_sell.append(item)
+                active_count += 1
             else:
                 item_to_sell.append(item)
+        else:
+            item_to_sell.append(item)
+    player_data.inventory = ",".join(inventory_after_sell) if inventory_after_sell else active_weapon['name']
+    gold_earned = sum(items_cache[item_name]['level_req'] * 100 for item_name in item_to_sell)
 
-        player.inventory = ",".join(inventory_after_sell)
+    with engine.connect() as conn:
+        current_gold = conn.execute(
+            text("SELECT gold FROM players WHERE id = :id"),
+            {"id": player_data.id}
+        ).scalar() or 0
 
-        print(f"{player.name} inventory po selekcji: {player.inventory}, do sprzedania: {item_to_sell}")
-'''
-        # Aktualizacja w bazie danych
-        with engine.connect() as conn:
-            conn.execute(
-                text("UPDATE players SET inventory = :inv WHERE id = :id"),
-                {"inv": player.inventory, "id": player.id}
-            )
-            conn.commit()
-'''
+        new_gold = current_gold + gold_earned
+
+        conn.execute(
+            text("UPDATE players SET inventory = :inv, gold = :gold WHERE id = :id"),
+            {"inv": player_data.inventory, "gold": new_gold, "id": player_data.id}
+        )
+        conn.commit()
 
 
-def fight_all(players_data, fights_per_player=3):
+
+def fight_all(players_data, fights_per_player=1):
     max_workers = min(32, os.cpu_count() * 2)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -413,7 +404,12 @@ def fight_all(players_data, fights_per_player=3):
             try:
                 future.result()
             except Exception as e:
-                print("Błąd w wątku:", e)
+                print("=== Błąd w wątku ===")
+                print("Typ błędu:", type(e))
+                print("Treść błędu:", e)
+                print("Traceback:")
+                traceback.print_exc()
+                print("=====================")
 
 
 vote = ""
@@ -422,7 +418,7 @@ def time_gooner():
     while True:
         try:
             vote = int(input("how many days has to be skipped?(1-50): "))
-            if 1 <= vote <= 50:
+            if 1 <= vote <= 100:
                 break
             else:
                 print("od 1 do 20 !!!")
@@ -436,7 +432,8 @@ def time_gooner():
         fight_all(players)
         end =  time.perf_counter()
         print(end-start)
-    sell_other_weapons(players)
+
+
 
 time_gooner()
 
