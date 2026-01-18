@@ -9,17 +9,17 @@
 
 5. losowy drop itemów z monsterów przedział +/- 5 od levela postaci DONE
 
-6. usuwanie duplikatow z EQ
+6. usuwanie duplikatow z EQ -> possibly done
 
 7. tabela ekwipunek (player_id, bron_id, zbroja_id, rekawice_id, spodnie_id, buty_id, pierscien_id, naszyjnik_id)
 ( Ekwipunek_ubrany vs Bagaż )
 8. korelacja itemy <-> postac
 
-9. player musi zawsze mieć na sobie możliwie najlepszy ekwipunek
+9. player musi zawsze mieć na sobie możliwie najlepszy ekwipunek - weapon DONE
 
 10. NPC i ich ekwipunek, waluta
 
-11.przeliczanie wartości itemów
+11.przeliczanie wartości itemów +/- alpha done
 
 12.tradehouse korelacja player wartosc ekwipunek
 
