@@ -219,7 +219,24 @@ def handle_win(player_data, monster_data, list_of_items_data):
         player_data.level += 1
         with engine.connect() as connection:
             connection.execute(
-                text("UPDATE players SET level = level + 1 WHERE id = :id"),
+                text("UPDATE players SET level = level + 1, hp_max = hp_max + 100, "
+                     "strenght = strenght + CASE class "
+                            "WHEN 'warrior' THEN 10 "
+                            "WHEN 'mage' THEN 1 "
+                            "WHEN 'rogue' THEN 5 "
+                            "ELSE 5 "
+                          "END, agility = agility + CASE class "
+                          "WHEN 'warrior' THEN 5 "
+                          "WHEN 'mage' THEN 1 "
+                          "WHEN 'rogue' THEN 10 "
+                          "ELSE 5 "
+                        "END,intelligence = intelligence + CASE class "
+                                     "WHEN 'warrior' THEN 1 "
+                                     "WHEN 'mage' THEN 10 "
+                                     "WHEN 'rogue' THEN 1 "
+                                     "ELSE 5 "
+                                  "END, hp_current = hp_max WHERE id = :id"),
+
                 {"id": player_data.id}
             )
             connection.commit()
