@@ -11,19 +11,17 @@
 
 6. usuwanie duplikatow z EQ -> possibly done
 
-7. tabela ekwipunek (player_id, bron_id, zbroja_id, rekawice_id, spodnie_id, buty_id, pierscien_id, naszyjnik_id)
-( Ekwipunek_ubrany vs Bagaż )
 8. korelacja itemy <-> postac
 
 9. player musi zawsze mieć na sobie możliwie najlepszy ekwipunek - weapon DONE
 
-10. NPC i ich ekwipunek, waluta
+10.przeliczanie wartości itemów +/- done
+e
+11.tradehouse korelacja player wartosc ekwipunek done
 
-11.przeliczanie wartości itemów +/- alpha done
+12. Possibility to earn new items by players <player.gold player.level, offer.gold offer.level>
 
-12.tradehouse korelacja player wartosc ekwipunek
-
-  3. Trading House ( Player -> Ekwipunek )
+13.Reports in Power BI regards trade_house
 
 -----------------------------------------------------------------------
 
